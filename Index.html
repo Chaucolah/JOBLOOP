@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JOBLOOP — Recherche Emploi Tours 37</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Raleway:wght@400;600;800;900&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --glass: rgba(255,255,255,0.10);
+    --glass-border: rgba(255,255,255,0.20);
+    --glass-hover: rgba(255,255,255,0.16);
+    --accent: #a78bfa;
+    --accent2: #f0abfc;
+    --text: #f1f5f9;
+    --muted: rgba(241,245,249,0.55);
+    --blur: blur(18px);
+  }
+  body {
+    font-family: 'Raleway', sans-serif;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    padding: 2rem 1rem 4rem;
+    color: var(--text);
+    overflow-x: hidden;
+  }
+  body::before, body::after {
+    content: ''; position: fixed; border-radius: 50%;
+    filter: blur(80px); opacity: 0.28; pointer-events: none;
+    animation: blob 8s ease-in-out infinite alternate;
+  }
+  body::before { width:400px;height:400px;background:radial-gradient(circle,#7c3aed,#4f46e5);top:-100px;left:-100px; }
+  body::after  { width:350px;height:350px;background:radial-gradient(circle,#db2777,#9333ea);bottom:-80px;right:-80px;animation-delay:-4s; }
+  @keyframes blob { 0%{transform:scale(1) translate(0,0)} 100%{transform:scale(1.2) translate(30px,20px)} }
+
+  .container { width:100%; max-width:700px; margin:0 auto; position:relative; z-index:1; }
+
+  .header { text-align:center; margin-bottom:2rem; animation:fadeDown .6s ease both; }
+  .header h1 {
+    font-family:'Raleway',sans-serif; font-size:2.6rem; font-weight:900;
+    letter-spacing:.12em; text-transform:uppercase;
+    background:linear-gradient(135deg,#e879f9,#a78bfa,#60a5fa);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+    margin-bottom:.4rem;
+  }
+  .header p { color:var(--muted); font-size:.88rem; }
+  .badge {
+    display:inline-block; background:var(--glass); border:1px solid var(--glass-border);
+    border-radius:20px; padding:.25rem .9rem; font-size:.75rem; color:var(--accent2);
+    margin-top:.5rem; backdrop-filter:var(--blur);
+  }
+  .updated { font-size:.7rem; color:var(--muted); margin-top:.4rem; }
+
+  .card {
+    background:var(--glass); border:1px solid var(--glass-border); border-radius:20px;
+    padding:1.6rem; backdrop-filter:var(--blur); -webkit-backdrop-filter:var(--blur);
+    margin-bottom:1.2rem;
+  }
+  .card-title {
+    font-size:.70rem; font-weight:600; letter-spacing:.13em; text-transform:uppercase;
+    color:var(--accent2); margin-bottom:1rem;
+  }
+
+  /* Barre de recherche */
+  .search-row { display:flex; gap:.6rem; margin-bottom:.9rem; }
+  .search-input {
+    flex:1; background:rgba(255,255,255,.08); border:1px solid var(--glass-border);
+    border-radius:12px; padding:.75rem 1rem; color:var(--text);
+    font-family:'DM Sans',sans-serif; font-size:.9rem; outline:none;
+    transition:border-color .2s, background .2s;
+  }
+  .search-input::placeholder { color:var(--muted); }
+  .search-input:focus { border-color:var(--accent); background:rgba(255,255,255,.12); }
+  .btn-search {
+    background:linear-gradient(135deg,#7c3aed,#4f46e5); border:none;
+    border-radius:12px; padding:.75rem 1.2rem; color:white;
+    font-family:'DM Sans',sans-serif; font-size:.85rem; font-weight:600;
+    cursor:pointer; transition:transform .15s, box-shadow .15s; white-space:nowrap;
+  }
+  .btn-search:hover { transform:translateY(-1px); box-shadow:0 8px 20px rgba(124,58,237,.4); }
+  .btn-search:active { transform:scale(.97); }
+
+  /* Tags rapides */
+  .tags { display:flex; flex-wrap:wrap; gap:.45rem; margin-bottom:.5rem; }
+  .tag {
+    background:rgba(167,139,250,.12); border:1px solid rgba(167,139,250,.28);
+    border-radius:20px; padding:.28rem .85rem; font-size:.76rem; color:var(--accent);
+    cursor:pointer; transition:all .2s; user-select:none;
+  }
+  .tag:hover { background:rgba(167,139,250,.25); color:#fff; }
+  .tag.active { background:var(--accent); border-color:var(--accent); color:white; }
+
+  /* Banner confirmation */
+  .banner {
+    display:none; background:rgba(52,211,153,.13); border:1px solid rgba(52,211,153,.3);
+    border-radius:10px; padding:.6rem 1rem; font-size:.80rem; color:#34d399; margin-top:.75rem;
+  }
+  .banner.show { display:block; }
+  .banner strong { color:#6ee7b7; }
+
+  /* Offres */
+  .section-title {
+    font-size:.70rem; font-weight:600; letter-spacing:.13em; text-transform:uppercase;
+    color:var(--accent2); margin-bottom:1rem;
+  }
+
+  .job-card {
+    background:rgba(255,255,255,.07); border:1px solid var(--glass-border);
+    border-radius:14px; padding:1.1rem 1.2rem; margin-bottom:.75rem;
+    transition:background .2s, transform .2s;
+  }
+  .job-card:hover { background:var(--glass-hover); transform:translateY(-2px); }
+  .job-card.hidden { display:none; }
+
+  .job-top { display:flex; justify-content:space-between; align-items:flex-start; gap:.5rem; margin-bottom:.35rem; }
+  .job-title { font-size:.93rem; font-weight:600; flex:1; }
+  .job-type {
+    font-size:.67rem; font-weight:600; letter-spacing:.05em;
+    padding:.2rem .6rem; border-radius:8px; white-space:nowrap; flex-shrink:0;
+  }
+  .t-cdi     { background:rgba(52,211,153,.18);  color:#34d399; border:1px solid rgba(52,211,153,.3); }
+  .t-cdd     { background:rgba(251,146,60,.18);  color:#fb923c; border:1px solid rgba(251,146,60,.3); }
+  .t-interim { background:rgba(167,139,250,.18); color:var(--accent); border:1px solid rgba(167,139,250,.3); }
+
+  .job-company { font-size:.82rem; color:var(--accent2); margin-bottom:.3rem; font-weight:500; }
+  .job-desc { font-size:.80rem; color:var(--muted); line-height:1.55; margin-bottom:.6rem; }
+  .job-meta { display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; }
+  .job-meta span { font-size:.72rem; color:var(--muted); }
+  .job-link {
+    margin-left:auto; font-size:.74rem; color:var(--accent);
+    text-decoration:none; border:1px solid rgba(167,139,250,.35);
+    border-radius:8px; padding:.25rem .65rem; transition:all .2s;
+  }
+  .job-link:hover { background:rgba(167,139,250,.18); color:white; }
+
+  .no-results { text-align:center; padding:1.5rem; color:var(--muted); font-size:.88rem; display:none; }
+
+  /* Plateformes */
+  .boards-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:.7rem; }
+  .board-btn {
+    display:flex; align-items:center; gap:.7rem;
+    background:rgba(255,255,255,.07); border:1px solid var(--glass-border);
+    border-radius:14px; padding:.85rem 1rem;
+    text-decoration:none; color:var(--text); transition:all .2s;
+  }
+  .board-btn:hover { background:var(--glass-hover); border-color:rgba(255,255,255,.35); transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,.25); }
+  .board-icon { width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0; }
+  .board-info { flex:1; min-width:0; }
+  .board-name { font-size:.83rem; font-weight:600; display:block; }
+  .board-sub  { font-size:.70rem; color:var(--muted); }
+  .board-arrow { font-size:.85rem; color:var(--muted); transition:transform .2s; }
+  .board-btn:hover .board-arrow { transform:translateX(3px); }
+  .ft  .board-icon { background:rgba(35,140,220,.2); }
+  .ind .board-icon { background:rgba(46,165,100,.2); }
+  .hw  .board-icon { background:rgba(239,68,68,.2); }
+  .mj  .board-icon { background:rgba(251,146,60,.2); }
+  .wtj .board-icon { background:rgba(236,72,153,.2); }
+  .lbc .board-icon { background:rgba(250,204,21,.2); }
+
+  .hint { text-align:center; font-size:.73rem; color:var(--muted); margin-top:.75rem; }
+  .hint span { color:var(--accent); }
+
+  @keyframes fadeDown { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>JOBLOOP</h1>
+    <p>Offres sélectionnées pour votre profil · Tours &amp; alentours</p>
+    <span class="badge">📍 Tours · Indre-et-Loire · 37</span>
+    <p class="updated">🕐 Relevé le 30 mars 2026</p>
+  </div>
+
+  <!-- Barre de recherche + tags -->
+  <div class="card">
+    <div class="card-title">🔍 Recherche personnalisée</div>
+    <div class="search-row">
+      <input class="search-input" id="searchInput" type="text"
+        placeholder="Ex : agent d'accueil, secrétaire, caissière…"
+        value="assistante administrative"
+        oninput="updatePlatformLinks()"
+        onkeydown="if(event.key==='Enter') applySearch()"
+      />
+      <button class="btn-search" onclick="applySearch()">Rechercher</button>
+    </div>
+    <div class="tags">
+      <span class="tag active" onclick="setTag(this,'assistante administrative')">Assistante administrative</span>
+      <span class="tag" onclick="setTag(this,'agent accueil receptionniste')">Agent d'accueil</span>
+      <span class="tag" onclick="setTag(this,'secrétaire')">Secrétaire</span>
+      <span class="tag" onclick="setTag(this,'hôtesse de caisse')">Hôtesse de caisse</span>
+      <span class="tag" onclick="setTag(this,'employée libre service')">Employée libre-service</span>
+      <span class="tag" onclick="setTag(this,'réceptionniste')">Réceptionniste</span>
+    </div>
+    <div class="banner" id="banner">
+      ✅ Liens mis à jour avec <strong id="bannerKw"></strong> — cliquez sur une plateforme ci-dessous.
+    </div>
+  </div>
+
+  <!-- Offres intégrées -->
+  <div class="card">
+    <div class="section-title">📋 Offres actuelles — relevées pour vous</div>
+
+    <div id="jobs-list">
+
+      <div class="job-card" data-keywords="administrative administratif secrétaire bureau">
+        <div class="job-top">
+          <div class="job-title">Assistante Administrative et RH</div>
+          <span class="job-type t-cdd">CDD 6 mois</span>
+        </div>
+        <div class="job-company">🏢 GEIQ Propreté — Tours (37)</div>
+        <div class="job-desc">Accueil téléphonique et physique, suivi de dossiers salariés, classement et archivage, rédaction de courriers. Prise de poste début avril 2026.</div>
+        <div class="job-meta">
+          <span>📍 Tours</span>
+          <span>🕐 Temps plein · Horaires de jour</span>
+          <a class="job-link" href="https://candidat.francetravail.fr/offres/recherche/detail/205VGXK" target="_blank" rel="noopener">France Travail →</a>
+        </div>
+      </div>
+
+      <div class="job-card" data-keywords="administrative administratif secrétaire événementiel">
+        <div class="job-top">
+          <div class="job-title">Assistante Administrative et Événementielle</div>
+          <span class="job-type t-cdd">CDD 6 mois</span>
+        </div>
+        <div class="job-company">🏢 Association — La Membrolle-sur-Choisille (37)</div>
+        <div class="job-desc">Soutien administratif dans une association, gestion des plannings, courriers, accueil du public.</div>
+        <div class="job-meta">
+          <span>📍 La Membrolle-sur-Choisille</span>
+          <a class="job-link" href="https://candidat.francetravail.fr/offres/emploi/adjoint-administratif/tours/s23m3v26" target="_blank" rel="noopener">France Travail →</a>
+        </div>
+      </div>
+
+      <div class="job-card" data-keywords="administrative administratif associatif bureau">
+        <div class="job-top">
+          <div class="job-title">Assistante Administrative — Vie Associative</div>
+          <span class="job-type t-cdi">CDI 80%</span>
+        </div>
+        <div class="job-company">🏢 UNAF — Tours (37)</div>
+        <div class="job-desc">Tenue à jour des dossiers d'associations, gestion des listes d'adhérents, accueil téléphonique et transmission de messages.</div>
+        <div class="job-meta">
+          <span>📍 Tours</span>
+          <span>🕐 Temps partiel 80%</span>
+          <a class="job-link" href="https://fr.indeed.com/q-hotesse-l-tours-(37)-emplois.html" target="_blank" rel="noopener">Indeed →</a>
+        </div>
+      </div>
+
+      <div class="job-card" data-keywords="administrative administratif commercial bureau">
+        <div class="job-top">
+          <div class="job-title">Assistante Administrative et Commerciale</div>
+          <span class="job-type t-cdi">CDI</span>
+        </div>
+        <div class="job-company">🏢 AU FORUM DU BÂTIMENT — Joué-lès-Tours (37)</div>
+        <div class="job-desc">Traitement des devis et commandes, support commercial, vérification et validation de documents administratifs.</div>
+        <div class="job-meta">
+          <span>📍 Joué-lès-Tours</span>
+          <a class="job-link" href="https://fr.indeed.com/q-assistant-administratif-l-tours-(37)-emplois.html" target="_blank" rel="noopener">Indeed →</a>
+        </div>
+      </div>
+
+      <div class="job-card" data-keywords="administrative administratif formation accueil">
+        <div class="job-top">
+          <div class="job-title">Assistante Administrative</div>
+          <span class="job-type t-cdi">CDI</span>
+        </div>
+        <div class="job-company">🏢 GRETA Centre Val de Loire — Saint-Pierre-des-Corps (37)</div>
+        <div class="job-desc">Accueil téléphonique et physique des clients, stagiaires et partenaires. Suivi des prestations et feuilles de présence.</div>
+        <div class="job-meta">
+          <span>📍 Saint-Pierre-des-Corps</span>
+          <span>🚌 Accessible TC</span>
+          <a class="job-link" href="https://fr.indeed.com/q-administratif-l-tours-(37)-emplois.html" target="_blank" rel="noopener">Indeed →</a>
+        </div>
+      </div>
+
+      <div class="job-card" data-keywords="accueil receptionniste hôtel hôtesse">
+        <div class="job-top">
+          <div class="job-title">Réceptionniste Tournante</div>
+          <span class="job-type t-cdi">CDI</span>
+        </div>
+        <div class="job-company">🏢 Grand Hôtel de Tours — Centre-ville Tours (37)</div>
+        <div class="job-desc">Accueil et conseil des clients durant leur séjour, gestion des appels, prise en charge des réclamations.</div>
+        <div class="job-meta">
+          <span>📍 Tours Centre</span>
+          <a class="job-link" href="https://candidat.francetravail.fr/offres/emploi/receptionniste/tours/s40m1v26" target="_blank" rel="noopener">France Travail →</a>
+        </div>
+      </div>
+
+      <div class="job-card" data-keywords="accueil receptionniste hôtel hôtesse">
+        <div class="job-top">
+          <div class="job-title">Réceptionniste</div>
+          <span class="job-type t-cdi">CDI</span>
+        </div>
+        <div class="job-company">🏢 Novotel Tours Centre Gare — Tours (37)</div>
+        <div class="job-desc">Accueil physique et téléphonique, gestion des arrivées et départs, information et orientation des clients.</div>
+        <div class="job-meta">
+          <span>📍 Tours Gare</span>
+          <span>🚌 Accessible TC</span>
+          <a class="job-link" href="https://fr.indeed.com/q-accueil-l-tours-(37)-emplois.html" target="_blank" rel="noopener">Indeed →</a>
+        </div>
+      </div>
+
+      <div class="job-card" data-keywords="accueil hôtesse caisse cdd">
+        <div class="job-top">
+          <div class="job-title">Hôtesse / Hôte d'Accueil</div>
+          <span class="job-type t-cdd">CDD 30h</span>
+        </div>
+        <div class="job-company">🏢 Auchan Hypermarché — Chambray-lès-Tours (37)</div>
+        <div class="job-desc">Renseigner et orienter les clients, gérer les remboursements selon consignes, livraison de colis. Service client polyvalent.</div>
+        <div class="job-meta">
+          <span>📍 Chambray-lès-Tours</span>
+          <a class="job-link" href="https://fr.indeed.com/q-accueil-l-tours-(37)-emplois.html" target="_blank" rel="noopener">Indeed →</a>
+        </div>
+      </div>
+
+      <div class="job-card" data-keywords="caisse hôtesse encaissement libre service">
+        <div class="job-top">
+          <div class="job-title">Hôtesse de Caisse</div>
+          <span class="job-type t-cdi">CDI 30h/semaine</span>
+        </div>
+        <div class="job-company">🏢 Intermarché — Tours (37)</div>
+        <div class="job-desc">Accueil clients en caisse, enregistrement des achats, encaissement. 5 jours/7. 13e mois + mutuelle + remise fidélité.</div>
+        <div class="job-meta">
+          <span>📍 Tours</span>
+          <span>💶 13e mois + avantages</span>
+          <a class="job-link" href="https://fr.indeed.com/q-h%C3%B4tesse-de-caisse-l-tours-(37)-emplois.html" target="_blank" rel="noopener">Indeed →</a>
+        </div>
+      </div>
+
+      <div class="job-card" data-keywords="caisse hôtesse accueil encaissement">
+        <div class="job-top">
+          <div class="job-title">Hôtesse Accueil Caisse</div>
+          <span class="job-type t-cdi">CDI</span>
+        </div>
+        <div class="job-company">🏢 Castorama — Chambray-lès-Tours (37)</div>
+        <div class="job-desc">Accueil clients, encaissement, location de matériel, remboursements, livraison de colis.</div>
+        <div class="job-meta">
+          <span>📍 Chambray-lès-Tours</span>
+          <a class="job-link" href="https://fr.indeed.com/q-hotesse-l-tours-(37)-emplois.html" target="_blank" rel="noopener">Indeed →</a>
+        </div>
+      </div>
+
+      <div class="job-card" data-keywords="employée libre service rayon caisse vente">
+        <div class="job-top">
+          <div class="job-title">Employée Libre-Service / Vendeuse</div>
+          <span class="job-type t-cdi">CDI</span>
+        </div>
+        <div class="job-company">🏢 Saint-Gobain Distribution — Tours (37)</div>
+        <div class="job-desc">Mise en rayon, vente et conseil client, encaissement. Profil orienté service client recherché.</div>
+        <div class="job-meta">
+          <span>📍 Tours</span>
+          <a class="job-link" href="https://fr.indeed.com/q-caisse-l-tours-(37)-emplois.html" target="_blank" rel="noopener">Indeed →</a>
+        </div>
+      </div>
+
+    </div>
+    <div class="no-results" id="no-results">Aucune offre trouvée pour ce mot-clé dans les offres intégrées.<br>Utilisez les plateformes ci-dessous pour une recherche plus large.</div>
+  </div>
+
+  <!-- Plateformes -->
+  <div class="card">
+    <div class="card-title">🌐 Ouvrir sur une plateforme</div>
+    <div class="boards-grid">
+      <a class="board-btn ft" id="btn-ft" target="_blank" rel="noopener" href="https://candidat.francetravail.fr/offres/recherche?motsCles=assistante+administrative&lieuTravail=37000">
+        <div class="board-icon">🏛️</div>
+        <div class="board-info"><span class="board-name">France Travail</span><span class="board-sub">Offres officielles</span></div>
+        <span class="board-arrow">→</span>
+      </a>
+      <a class="board-btn ind" id="btn-ind" target="_blank" rel="noopener" href="https://fr.indeed.com/jobs?q=assistante+administrative&l=Tours+%2837%29">
+        <div class="board-icon">💼</div>
+        <div class="board-info"><span class="board-name">Indeed</span><span class="board-sub">+70 offres actives</span></div>
+        <span class="board-arrow">→</span>
+      </a>
+      <a class="board-btn hw" id="btn-hw" target="_blank" rel="noopener" href="https://www.hellowork.com/fr-fr/emploi/metier_assistant-administratif-ville_tours-37000.html">
+        <div class="board-icon">🔴</div>
+        <div class="board-info"><span class="board-name">HelloWork</span><span class="board-sub">+30 offres actives</span></div>
+        <span class="board-arrow">→</span>
+      </a>
+      <a class="board-btn mj" id="btn-mj" target="_blank" rel="noopener" href="https://www.meteojob.com/Tours-(37)-Emploi-Assistant-Administratif">
+        <div class="board-icon">🌤️</div>
+        <div class="board-info"><span class="board-name">Meteojob</span><span class="board-sub">~29 offres actives</span></div>
+        <span class="board-arrow">→</span>
+      </a>
+      <a class="board-btn wtj" id="btn-wtj" target="_blank" rel="noopener" href="https://www.welcometothejungle.com/fr/jobs?query=assistante+administrative&aroundQuery=Tours%2C+France">
+        <div class="board-icon">🌿</div>
+        <div class="board-info"><span class="board-name">Welcome to the Jungle</span><span class="board-sub">Offres qualifiées</span></div>
+        <span class="board-arrow">→</span>
+      </a>
+      <a class="board-btn lbc" id="btn-lbc" target="_blank" rel="noopener" href="https://www.leboncoin.fr/recherche?category=1&text=assistante+administrative&locations=Tours_37000">
+        <div class="board-icon">🟡</div>
+        <div class="board-info"><span class="board-name">LeBonCoin</span><span class="board-sub">Annonces locales</span></div>
+        <span class="board-arrow">→</span>
+      </a>
+    </div>
+    <p class="hint">Les liens se mettent à jour avec <span>vos mots-clés + Tours 37</span></p>
+  </div>
+
+</div>
+
+<script>
+  function openBoard(board) {
+    const q = getQuery() || 'assistante administrative';
+    const urls = buildUrls(q);
+    window.location.href = urls[board];
+  }
+
+  function getQuery() {
+    return document.getElementById('searchInput').value.trim().toLowerCase();
+  }
+
+  function buildUrls(q) {
+    const enc = encodeURIComponent(q);
+    const plus = q.replace(/\s+/g, '+');
+    return {
+      ft:  `https://candidat.francetravail.fr/offres/recherche?motsCles=${enc}&lieuTravail=37000&lieuTravailLibelle=Tours%20(37000)`,
+      ind: `https://fr.indeed.com/jobs?q=${plus}&l=Tours+%2837%29`,
+      hw:  `https://www.hellowork.com/fr-fr/emploi/recherche?k=${enc}&l=Tours+37000`,
+      mj:  `https://www.meteojob.com/jobsearch/offres?what=${enc}&where=Tours%2C+37`,
+      wtj: `https://www.welcometothejungle.com/fr/jobs?query=${enc}&aroundQuery=Tours%2C+France`,
+      lbc: `https://www.leboncoin.fr/recherche?category=1&text=${enc}&locations=Tours_37000`
+    };
+  }
+
+  function updatePlatformLinks() {
+    const q = getQuery();
+    if (q.length < 2) return;
+    const urls = buildUrls(q);
+    document.getElementById('btn-ft').href  = urls.ft;
+    document.getElementById('btn-ind').href = urls.ind;
+    document.getElementById('btn-hw').href  = urls.hw;
+    document.getElementById('btn-mj').href  = urls.mj;
+    document.getElementById('btn-wtj').href = urls.wtj;
+    document.getElementById('btn-lbc').href = urls.lbc;
+  }
+
+  function applySearch() {
+    const q = getQuery();
+    if (!q) return;
+
+    updatePlatformLinks();
+
+    // Filtrer les offres intégrées par mots-clés
+    const cards = document.querySelectorAll('.job-card');
+    const words = q.split(/\s+/).filter(w => w.length > 2);
+    let visible = 0;
+
+    cards.forEach(c => {
+      const kw = (c.dataset.keywords || '').toLowerCase();
+      const title = c.querySelector('.job-title').textContent.toLowerCase();
+      const match = words.some(w => kw.includes(w) || title.includes(w));
+      if (match || words.length === 0) {
+        c.classList.remove('hidden');
+        visible++;
+      } else {
+        c.classList.add('hidden');
+      }
+    });
+
+    document.getElementById('no-results').style.display = visible === 0 ? 'block' : 'none';
+
+    // Feedback
+    document.getElementById('bannerKw').textContent = '"' + q + '"';
+    const banner = document.getElementById('banner');
+    banner.classList.add('show');
+    setTimeout(() => banner.classList.remove('show'), 3500);
+  }
+
+  function setTag(el, value) {
+    document.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('searchInput').value = value;
+    applySearch();
+  }
+
+  // Init
+  updatePlatformLinks();
+</script>
+</body>
+</html>
